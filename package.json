@@ -1,0 +1,25 @@
+{
+  "name": "red-contrib-loxone-ici",
+  "version": "1.0.0",
+  "description": "allows node-red to communicate with loxone",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "node-red": {
+    "version": ">=4.0.0",
+    "nodes": {
+      "loxone-server": "nodes/config.js",
+      "loxone-in": "nodes/io/input.js",
+      "loxone-out": "nodes/io/output.js"
+    }
+  },
+  "dependencies": {
+    "@types/node-red": "^1.3.5",
+    "loxone-ici": "^0.0.11",
+    "node-red-node-test-helper": "^0.3.4"
+  }
+}

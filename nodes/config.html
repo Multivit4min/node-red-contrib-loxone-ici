@@ -1,0 +1,61 @@
+<script type="text/javascript">
+  RED.nodes.registerType("loxone server", {
+    category: "config",
+    defaults: {
+      name: {
+        value: ""
+      },
+      ownId: {
+        value: "red",
+        required: true,
+        //validate: RED.validators.string().max(8)
+      },
+      listenPort: { 
+        value: 61263,
+        required: true,
+        validate: RED.validators.number()
+      },
+      remoteId: {
+        value: "*",
+        required: true
+      },
+      host: {
+        value: "192.168.0.1",
+        required: true
+      },
+      port: { 
+        value: 61263,
+        required: true,
+        validate: RED.validators.number()
+      },
+    },
+    label: function() { return this.name||`${this.host}:${this.port}` }
+  })
+</script>
+
+<script type="text/html" data-template-name="loxone server">
+  <div class="form-row">
+    <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-config-input-name">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-ownId"><i class="fa fa-id-badge"></i> Own Id</label>
+    <input type="text" id="node-config-input-ownId">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-listenPort"><i class="fa fa-dot-circle-o"></i> Listen Port</label>
+    <input type="number" id="node-config-input-listenPort">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-remoteId"><i class="fa fa-id-badge"></i> Remote Id</label>
+    <input type="text" id="node-config-input-remoteId">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-host"><i class="fa fa-server"></i> Loxone Host</label>
+    <input type="text" id="node-config-input-host">
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-port"><i class="fa fa-dot-circle-o"></i> Loxone Port</label>
+    <input type="number" id="node-config-input-port">
+  </div>
+</script>

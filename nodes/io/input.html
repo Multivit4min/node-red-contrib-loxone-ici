@@ -1,0 +1,61 @@
+<script type="text/javascript">
+  RED.nodes.registerType("loxone in", {
+    category: "network",
+    color: "#79d968",
+    icon: "loxone.png",
+    defaults: {
+      name: {
+        value: ""
+      },
+      server: {
+        value: "", 
+        type: "loxone server",
+        required: true
+    },
+      packetId: {
+        value: "",
+        required: true
+      },
+      target: {
+        value: "",
+        required: true
+      },
+      targetType: {
+        value: "",
+        required: true
+      }
+    },
+    inputs: 0,
+    outputs: 1,
+    label: function() {
+      return this.name || "loxone in"
+    },
+    oneditprepare: function() {
+      $("#node-input-target").typedInput({
+        type:"msg",
+        types:["msg", "flow","global"],
+        typeField: "#node-input-targetType"
+      })
+    }
+  })
+</script>
+
+<script type="text/html" data-template-name="loxone in">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-server"><i class="fa fa-server"></i> Server</label>
+    <input type="text" id="node-input-server">
+  </div>
+  <div class="form-row">
+    <label for="node-input-packetId"><i class="fa fa-archive"></i> PacketId</label>
+    <input type="text" id="node-input-packetId">
+  </div>
+  <div class="form-row">
+    <label for="node-input-target"><i class="fa fa-tag"></i> Target</label>
+    <input type="text" id="node-input-target">
+    <input type="hidden" id="node-input-targetType">
+  </div>
+</script>

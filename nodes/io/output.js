@@ -1,6 +1,6 @@
 const { DATA_TYPE } = require("loxone-ici")
-const { getPath } = require("../shared/util.js")
 const { format, formatter } = require("../shared/format.js")
+const { getValue, inRange, match, or } = require("../shared/validator.js")
 
 module.exports = function(RED) {
   function LoxoneOutputNode(config) {
@@ -14,23 +14,18 @@ module.exports = function(RED) {
     /** @type {import("loxone-ici").LoxoneRemoteSystem} */
     const remote = server.remote
 
-    const getValue = (msg, { flow, global }, type, path, fallback) => {
-      switch (type) {
-        case "msg": return getPath(msg, path)
-        case "flow": return getPath(flow, path)
-        case "global": return getPath(global, path)
-        default:
-          if (fallback !== undefined) return fallback
-          throw new Error(`invalid source type: ${type}`)
-      }
-    }
-
-    const defaultHandler = (type) => {
+    /**
+     * 
+     * @param {import("loxone-ici").DATA_TYPE} dataType 
+     * @param {string} type 
+     * @returns 
+     */
+    const defaultHandler = (dataType, type) => {
       return (msg) => {
-        const val = getValue(msg, this.context(), config.sourceType, config.source)
-        const output = remote.createOutput(config.packetId, type)
-        if (!output.isTypeValid(val)) return new Error(`invalid value: ${JSON.stringify(val)}`)
-        return output.setValue(val)
+        const value = getValue({ payload: msg, key: "payload", type })
+        const output = remote.createOutput(config.packetId, dataType)
+        if (!output.isTypeValid(value)) throw new Error(`invalid value: ${JSON.stringify(value)}`)
+        return output.setValue(value)
       }
     }
 
@@ -57,49 +52,106 @@ module.exports = function(RED) {
     }
 
     /**
-     * @type {Record<string, (msg: any): Error|string> }
+     * @type {Record<string, (msg: any) => Error|any> }
      */
     const typeHandlers = {
-      DIGITAL: defaultHandler(DATA_TYPE.DIGITAL),
-      ANALOG: defaultHandler(DATA_TYPE.ANALOG),
-      TEXT: defaultHandler(DATA_TYPE.TEXT),
+      DIGITAL: defaultHandler(DATA_TYPE.DIGITAL, "boolean"),
+      ANALOG: defaultHandler(DATA_TYPE.ANALOG, "number"),
+      TEXT: defaultHandler(DATA_TYPE.TEXT, "string"),
       T5: async (msg) => {
-        const duration = getValue(msg, this.context(), config.sourceDurationType, config.sourceDuration, 0.2)
-        const val = { button: getButtonId(getValue(msg, this.context(), config.sourceType, config.source)) }
+        const duration = getValue({
+          payload: msg.payload,
+          key: "duration",
+          type: "number",
+          fallback: 0,
+          validator: inRange(0, Infinity)
+        })
+        const button = getButtonId(getValue({
+          payload: msg.payload,
+          key: "button",
+          type: ["string", "number"],
+          validator: or(
+            inRange(0, 5),
+            match(/^(TI0|TI1|TI2|TI3|TI4|TI5)$/)
+          )
+        }))
+        if (button instanceof Error) return button
         const out = remote.createOutput(config.packetId, DATA_TYPE.T5)
-        if (!out.isTypeValid(button)) return new Error(`invalid value: ${JSON.stringify(val)}`)
+        if (!out.isTypeValid({ button })) throw new Error(`invalid T5 value: ${JSON.stringify(button)}`)
         if (duration > 0) {
           this.status({
             fill: "green",
             shape: "dot",
-            text: formatter.T5(out.setValue(val).getValue().button)
+            text: formatter.T5(out.setValue({ button }).getValue().button)
           })
-          await out.setValue(val)
+          await out.setValue({ button })
           await sleep(duration * 1000)
           return out.setValue({ button: 0 })
         } else {
-          return out.setValue(val)
+          return out.setValue({ button })
         }
       },
       SmartActuatorRGBW: (msg) => {
-        const res = { bits: 0 }
-        res.red = getValue(msg, this.context(), config.sourceRedType, config.sourceRed, 0)
-        res.green = getValue(msg, this.context(), config.sourceGreenType, config.sourceGreen, 0)
-        res.blue = getValue(msg, this.context(), config.sourceBlueType, config.sourceBlue, 0)
-        res.white = getValue(msg, this.context(), config.sourceWhiteType, config.sourceWhite, 0)
-        res.fadeTime = getValue(msg, this.context(), config.sourceFadeTimeType, config.sourceFadeTime, 0)
-        if (typeof res.fadeTime !== "number" || res.fadeTime < 0) res.fadeTime = 0
+        const res = {}
+        res.bits = getValue({
+          payload: msg.payload,
+          key: "bits",
+          type: "number",
+          fallback: 0,
+          validator: inRange(0, 0)
+        })
+        res.red = getValue({
+          payload: msg.payload,
+          key: "red",
+          type: "number",
+          validator: inRange(0, 100)
+        })
+        res.green = getValue({
+          payload: msg.payload,
+          key: "green",
+          type: "number",
+          validator: inRange(0, 100)
+        })
+        res.blue = getValue({
+          payload: msg.payload,
+          key: "blue",
+          type: "number",
+          validator: inRange(0, 100)
+        })
+        res.white = getValue({
+          payload: msg.payload,
+          key: "white",
+          type: "number",
+          validator: inRange(0, 100)
+        })
+        res.fadeTime = getValue({
+          payload: msg.payload,
+          key: "fadeTime",
+          type: "number",
+          fallback: 0,
+          validator: inRange(0, Infinity)
+        })
         const output = remote.createOutput(config.packetId, DATA_TYPE.SmartActuatorRGBW)
-        if (!output.isTypeValid(res)) return new Error(`invalid value: ${JSON.stringify(res)}`)
+        if (!output.isTypeValid(res)) throw new Error(`invalid value: ${JSON.stringify(res)}`)
         return output.setValue(res)
       },
       SmartActuatorSingleChannel: (msg) => {
         const res = {}
-        res.channel = getValue(msg, this.context(), config.sourceType, config.source)
-        res.fadeTime = getValue(msg, this.context(), config.sourceFadeTimeType, config.sourceFadeTime, 0)
-        if (typeof res.fadeTime !== "number" || res.fadeTime < 0) res.fadeTime = 0
+        res.channel = getValue({
+          payload: msg.payload,
+          key: "channel",
+          type: "number",
+          validator: inRange(0, 100)
+        })
+        res.fadeTime = getValue({
+          payload: msg.payload,
+          key: "fadeTime",
+          type: "number",
+          fallback: 0,
+          validator: inRange(0, Infinity)
+        })
         const output = remote.createOutput(config.packetId, DATA_TYPE.SmartActuatorSingleChannel)
-        if (!output.isTypeValid(res)) return new Error(`invalid value: ${JSON.stringify(res)}`)
+        if (!output.isTypeValid(res)) throw new Error(`invalid value: ${JSON.stringify(res)}`)
         return output.setValue(res)
       }
     }
@@ -108,17 +160,14 @@ module.exports = function(RED) {
     const handler = async (msg, send, done) => {
       const handle = typeHandlers[config.dataType]
       if (!handle) return this.status({ fill: "red", shape: "dot", text: `data type ${config.dataType} not found` })
-      const out = await handle(msg)
-      if (out === undefined) return done(new Error(`no response from output handler`))
-      if (out instanceof Error) {
-        this.status({ fill: "orange", shape: "dot", text: out.message })
-        return done(out)
+      let out
+      try {
+        out = await handle(msg)
+        this.status({ fill: "green", shape: "dot", text: format(config.dataType, out.getValue()) })
+      } catch (e) {
+        if (!(e instanceof Error)) return this.status({ fill: "red", shape: "dot", text: `invalid response` })
+        return this.status({ fill: "red", shape: "dot", text: e.message })
       }
-      if (out instanceof String) {
-        this.status({ fill: "orange", shape: "dot", text: out })
-        return done()
-      }
-      this.status({ fill: "green", shape: "dot", text: format(config.dataType, out.getValue()) })
       done()
     }
 

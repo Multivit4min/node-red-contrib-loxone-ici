@@ -15,7 +15,7 @@ const formatter = {
   DIGITAL: baseFormatter,
   ANALOG: baseFormatter,
   TEXT: baseFormatter,
-  T5: ({ button }) => {
+  T5: (button) => {
     switch (button) {
       case 0: return "0/0/0/0/0"
       case 16368: return "1/0/0/0/0"
@@ -23,7 +23,7 @@ const formatter = {
       case 16400: return "0/0/1/0/0"
       case 16384: return "0/0/0/1/0"
       case 16432: return "0/0/0/0/1"
-      default: return new Error(`invalid button id: ${id}`)
+      default: return new Error(`invalid button id: ${button}`)
     }
   },
   SmartActuatorSingleChannel: ({ channel, fadeTime }) => {

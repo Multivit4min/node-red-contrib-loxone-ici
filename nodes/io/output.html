@@ -15,105 +15,31 @@
       packetId: {
         value: "",
         required: true,
-        type: "text",
         validate: RED.validators.regex(/^[a-z0-9]{1,8}$/i)
       },
       outputField: { 
         value: "msg.payload",
-        required: true,
-        type: "text"
+        required: true
       },
       dataType: {
         value: "DIGITAL",
-        required: true,
-        type: "text"
-      },
-      source: {
-        value: "-"
-      },
-      sourceType: { value: "" },
-      sourceRed: {
-        value: "-"
-      },
-      sourceRedType: { value: "" },
-      sourceGreen: {
-        value: "-"
-      },
-      sourceGreenType: { value: "" },
-      sourceBlue: {
-        value: "-"
-      },
-      sourceBlueType: { value: "" },
-      sourceWhite: {
-        value: "-"
-      },
-      sourceWhiteType: { value: "" },
-      sourceDuration: {
-        value: "-"
-      },
-      sourceDurationType: { value: "" },
-      sourceFadeTime: {
-        value: "-"
-      },
-      sourceFadeTimeType: { value: "" }
+        required: true
+      }
     },
     inputs: 1,
     outputs: 0,
     label: function() {
-      return this.name || "loxone out"
+      return this.name || this.packetId || "loxone out"
     },
     oneditprepare: function() {
-      $("#node-input-source").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceType"
-      })
-      $("#node-input-sourceRed").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceRedType"
-      })
-      $("#node-input-sourceGreen").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceGreenType"
-      })
-      $("#node-input-sourceBlue").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceBlueType"
-      })
-      $("#node-input-sourceWhite").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceWhiteType"
-      })
-      $("#node-input-sourceDuration").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceDurationType"
-      })
-      $("#node-input-sourceFadeTime").typedInput({
-        type:"msg",
-        types:["msg", "flow","global"],
-        typeField: "#node-input-sourceFadeTimeType"
-      })
       $("#node-input-dataType").change(function() {
         const value = $(this).val()
-        const basicType = ["DIGITAL", "ANALOG", "TEXT"].includes(value)
-        const t5Type = ["T5"].includes(value)
-        const smaRGBW = ["SmartActuatorRGBW"].includes(value)
-        const smaSingleChannel = ["SmartActuatorSingleChannel"].includes(value)
-        $("#node-input-source").parent().toggle(basicType || t5Type || smaSingleChannel)
-        $("#node-input-sourceDuration").parent().toggle(t5Type)
-        $("#form-tip-source-t5").parent().toggle(t5Type)
-        $("#node-input-sourceRed").parent().toggle(smaRGBW)
-        $("#node-input-sourceGreen").parent().toggle(smaRGBW)
-        $("#node-input-sourceBlue").parent().toggle(smaRGBW)
-        $("#node-input-sourceWhite").parent().toggle(smaRGBW)
-        $("#node-input-sourceFadeTime").parent().toggle(smaSingleChannel || smaRGBW)
-        $("#form-tip-sma-color").parent().toggle(smaSingleChannel || smaRGBW)
-        $("#form-tip-sma-singlechannel").parent().toggle(smaSingleChannel || smaRGBW)
+        $("#form-tip-digital").parent().toggle(value === "DIGITAL")
+        $("#form-tip-analog").parent().toggle(value === "ANALOG")
+        $("#form-tip-text").parent().toggle(value === "TEXT")
+        $("#form-tip-t5").parent().toggle(value === "T5")
+        $("#form-tip-sma-rgbw").parent().toggle(value === "SmartActuatorRGBW")
+        $("#form-tip-sma-singlechannel").parent().toggle(value === "SmartActuatorSingleChannel")
       })
     }
   })
@@ -144,59 +70,85 @@
       <!--<option value="SmartActuatorTunableWhite">SmartActuatorTunableWhite</option>-->
     </select>
   </div>
-  <!-- DIGITAL, ANALOG, TEXT SOURCE, T5, SmartActuatorSingleChannel -->
+  <!-- DIGITAL -->
   <div class="form-row">
-    <label for="node-input-source"><i class="fa fa-tag"></i> Source</label>
-    <input type="text" id="node-input-source">
-    <input type="hidden" id="node-input-sourceType">
+    <div class="form-tips" id="form-tip-digital">
+      <code>msg.payload</code> should be type of <b>boolean</b>
+    </div>
+  </div>
+  <!-- ANALOG -->
+  <div class="form-row">
+    <div class="form-tips" id="form-tip-analog">
+      <code>msg.payload</code> should be type of <b>number</b>
+    </div>
+  </div>
+  <!-- TEXT -->
+  <div class="form-row">
+    <div class="form-tips" id="form-tip-text">
+      <code>msg.payload</code> should be type of <b>string</b>
+    </div>
   </div>
   <!-- T5 -->
   <div class="form-row">
-    <label for="node-input-sourceDuration"><i class="fa fa-clock-o"></i> Duration (s)</label>
-    <input type="string" id="node-input-sourceDuration">
-    <input type="hidden" id="node-input-sourceDurationType">
-  </div>
-  <div class="form-row">
-    <div class="form-tips" id="form-tip-source-t5">
-      <b>Valid Variable Types:</b>
-      <div><code>"TI0"</code> or <code>0</code> for NONE</div>
-      <div><code>"TI1"</code> or <code>1</code> for Shading I1</div>
-      <div><code>"TI2"</code> or <code>2</code> for Shading I2</div>
-      <div><code>"TI3"</code> or <code>3</code> for Lightning I3</div>
-      <div><code>"TI4"</code> or <code>4</code> for Audio I4</div>
-      <div><code>"TI5"</code> or <code>5</code> for Audio I5</div>
+    <div class="form-tips" id="form-tip-t5">
+      <p>Properties of <code>msg.payload</code>:</p>
+      <p>
+        <code>.button</code>
+        <div style="margin-left: 5%;">
+          <div><code>"TI0"</code> or <code>0</code> for <b>NONE</b></div>
+          <div><code>"TI1"</code> or <code>1</code> for <b>Shading I1</b></div>
+          <div><code>"TI2"</code> or <code>2</code> for <b>Shading I2</b></div>
+          <div><code>"TI3"</code> or <code>3</code> for <b>Lightning I3</b></div>
+          <div><code>"TI4"</code> or <code>4</code> for <b>Audio I4</b></div>
+          <div><code>"TI5"</code> or <code>5</code> for <b>Audio I5</b></div>
+        </div>
+      </p>
+      <p>
+        <code>[.duration]</code>
+        <div style="margin-left: 5%;">
+          Duration for how long the button should be pressed until a <code>0</code> will be written, you can leave this empty if you do not want the button to be kept pressed
+        </div>
+      </p>
     </div>
   </div>
   <!-- SmartActuatorRGBW -->
   <div class="form-row">
-    <label for="node-input-source"><i class="fa fa-tag"></i> Red</label>
-    <input type="text" id="node-input-sourceRed">
-    <input type="hidden" id="node-input-sourceRedType">
-  </div>
-  <div class="form-row">
-    <label for="node-input-source"><i class="fa fa-tag"></i> Green</label>
-    <input type="text" id="node-input-sourceGreen">
-    <input type="hidden" id="node-input-sourceGreenType">
-  </div>
-  <div class="form-row">
-    <label for="node-input-source"><i class="fa fa-tag"></i> Blue</label>
-    <input type="text" id="node-input-sourceBlue">
-    <input type="hidden" id="node-input-sourceBlueType">
-  </div>
-  <div class="form-row">
-    <label for="node-input-source"><i class="fa fa-tag"></i> White</label>
-    <input type="text" id="node-input-sourceWhite">
-    <input type="hidden" id="node-input-sourceWhiteType">
+    <div class="form-tips" id="form-tip-sma-rgbw">
+      <p>Properties of <code>msg.payload</code>:</p>
+      <p>
+        <code>.red</code>
+        <div style="margin-left: 5%;"><b>number</b> of this channel from 0 to 100</div>
+      </p>
+      <p>
+        <code>.green</code>
+        <div style="margin-left: 5%;"><b>number</b> of this channel from 0 to 100</div>
+      </p>
+      <p>
+        <code>.blue</code>
+        <div style="margin-left: 5%;"><b>number</b> of this channel from 0 to 100</div>
+      </p>
+      <p>
+        <code>.white</code>
+        <div style="margin-left: 5%;"><b>number</b> of this channel from 0 to 100</div>
+      </p>
+      <p>
+        <code>[.fadeTime]</code>
+        <div style="margin-left: 5%;">duration of the fade transition to the new state, as <b>number</b> in seconds</div>
+      </p>
+    </div>
   </div>
   <!-- SmartActuatorSingleChannel -->
   <div class="form-row">
-    <label for="node-input-sourceFadeTime"><i class="fa fa-clock-o"></i> Fade Time</label>
-    <input type="string" id="node-input-sourceFadeTime">
-    <input type="hidden" id="node-input-sourceFadeTimeType">
-  </div>
-  <div class="form-row">
     <div class="form-tips" id="form-tip-sma-singlechannel">
-      <div>Color/Channel <b>Source</b> can only go from 0 to 100</div>
+      <p>Properties of <code>msg.payload</code>:</p>
+      <p>
+        <code>.channel</code>
+        <div style="margin-left: 5%;"><b>number</b> of this channel from 0 to 100</div>
+      </p>
+      <p>
+        <code>[.fadeTime]</code>
+        <div style="margin-left: 5%;">duration of the fade transition to the new state, as <b>number</b> in seconds</div>
+      </p>
     </div>
   </div>
 </script>

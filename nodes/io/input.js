@@ -1,6 +1,5 @@
 const { typeToString } = require("../shared/dataType")
 const { format } = require("../shared/format.js")
-const { setPath } = require("../shared/util.js")
 
 module.exports = function(RED) {
   function LoxoneInputNode(config) {
@@ -29,17 +28,11 @@ module.exports = function(RED) {
       if (lastValue === newValue) return
       lastValue = newValue
       //prepare sendable message object
-      const msg = {
+      node.send({
         topic: data.packet.packetId,
-        loxone: {
-          type: typeToString[data.packet.type],
-          value: data.packet.payload.value
-        }
-      }
-      if (config.targetType === "msg") setPath(msg, config.target, data.packet.payload.value)
-      if (config.targetType === "flow") setPath(this.context().flow, config.target, data.packet.payload.value)
-      if (config.targetType === "global") setPath(this.context().global, config.target, data.packet.payload.value)
-      node.send(msg)
+        payloadType: typeToString[data.packet.type],
+        payload: data.packet.payload.value
+      })
     }
 
     loxoneServer.on("input", eventHandler)
